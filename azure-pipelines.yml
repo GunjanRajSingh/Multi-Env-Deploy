@@ -1,0 +1,132 @@
+trigger:
+  branches:
+    include:
+      - feature/*
+      - main
+
+pr:
+  branches:
+    include:
+      - main
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  - group: Dev-Variable
+  - group: Prod-Variable
+
+
+#  Dev Env
+stages:
+- stage: DevDeploy
+  displayName: Deploy to Dev
+  condition: startsWith(variables['Build.SourceBranch'], 'refs/heads/feature/')
+  jobs:
+  - deployment: DevJob
+    environment: Dev
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+            - task: TerraformInstaller@1
+              displayName: Install Terraform
+              inputs:
+                terraformVersion: latest
+
+            - task: TerraformTask@5
+              displayName: Terraform Init (Dev)
+              inputs:
+                provider: azurerm
+                command: init
+                workingDirectory: $(Work_Dir)
+                backendServiceArm: $(devServiceConnection)
+                backendAzureRmResourceGroupName: $(devTFStateRG)
+                backendAzureRmStorageAccountName: $(devTFStateSA)
+                backendAzureRmContainerName: $(devTFStateContainer)
+                backendAzureRmKey: $(devTFStateKey)
+                backendAzureRmUseEntraIdForAuthentication: true
+
+            - task: TerraformTask@5
+              displayName: Validate (Dev)
+              inputs:
+                provider: azurerm
+                command: validate
+                workingDirectory: infra/dev
+
+            - task: TerraformTask@5
+              displayName: Plan (Dev)
+              inputs:
+                provider: azurerm
+                command: plan
+                workingDirectory: infra/dev
+                environmentServiceNameAzureRM: $(devServiceConnection)
+                commandOptions: "-var-file=dev.tfvars"
+
+            - task: TerraformTask@5
+              displayName: Apply (Dev)
+              inputs:
+                provider: azurerm
+                command: apply
+                workingDirectory: infra/dev
+                environmentServiceNameAzureRM: $(devServiceConnection)
+                commandOptions: "-var-file=dev.tfvars"
+
+
+
+
+#  Prod Env
+- stage: ProdDeploy
+  displayName: Deploy to Prod
+  dependsOn: QADeploy
+  condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
+  approval: true   # Enables manual approval
+  jobs:
+  - deployment: ProdJob
+    environment: Prod
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+            - task: TerraformInstaller@1
+              displayName: Install Terraform
+              inputs:
+                terraformVersion: latest
+
+            - task: TerraformTask@5
+              displayName: Terraform Init (Prod)
+              inputs:
+                provider: azurerm
+                command: init
+                workingDirectory: infra/prod
+                backendServiceArm: $(prodServiceConnection)
+                backendAzureRmResourceGroupName: $(prodTFStateRG)
+                backendAzureRmStorageAccountName: $(prodTFStateSA)
+                backendAzureRmContainerName: $(prodTFStateContainer)
+                backendAzureRmKey: prod.tfstate
+                backendAzureRmUseEntraIdForAuthentication: true
+
+            - task: TerraformTask@5
+              displayName: Validate (Prod)
+              inputs:
+                provider: azurerm
+                command: validate
+                workingDirectory: infra/prod
+
+            - task: TerraformTask@5
+              displayName: Plan (Prod)
+              inputs:
+                provider: azurerm
+                command: plan
+                workingDirectory: infra/prod
+                environmentServiceNameAzureRM: $(prodServiceConnection)
+                commandOptions: "-var-file=prod.tfvars"
+
+            - task: TerraformTask@5
+              displayName: Apply (Prod)
+              inputs:
+                provider: azurerm
+                command: apply
+                workingDirectory: infra/prod
+                environmentServiceNameAzureRM: $(prodServiceConnection)
+                commandOptions: "-var-file=prod.tfvars"

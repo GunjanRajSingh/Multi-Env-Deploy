@@ -14,6 +14,7 @@ pool:
 
 variables:
   - group: Dev-Variable
+  - group: QA-Variable
   - group: Prod-Variable
 
 
@@ -73,6 +74,8 @@ stages:
                 environmentServiceNameAzureRM: $(devServiceConnection)
                 commandOptions: "-var-file=dev.tfvars"
 
+
+#  QA Env
 - stage: QADeploy
   displayName: Deploy to QA
   dependsOn: DevDeploy
@@ -87,6 +90,7 @@ stages:
       runOnce:
         deploy:
           steps:
+            - checkout: self
             - task: TerraformInstaller@1
               displayName: Install Terraform
               inputs:
@@ -97,12 +101,12 @@ stages:
               inputs:
                 provider: azurerm
                 command: init
-                workingDirectory: infra/qa
+                workingDirectory: $(Work_Dir)
                 backendServiceArm: $(qaServiceConnection)
                 backendAzureRmResourceGroupName: $(qaTFStateRG)
                 backendAzureRmStorageAccountName: $(qaTFStateSA)
                 backendAzureRmContainerName: $(qaTFStateContainer)
-                backendAzureRmKey: qa.tfstate
+                backendAzureRmKey: $(qaTFStateKey)
                 backendAzureRmUseEntraIdForAuthentication: true
 
             - task: TerraformTask@5
@@ -110,14 +114,14 @@ stages:
               inputs:
                 provider: azurerm
                 command: validate
-                workingDirectory: infra/qa
+                workingDirectory: $(Work_Dir)
 
             - task: TerraformTask@5
               displayName: Plan (QA)
               inputs:
                 provider: azurerm
                 command: plan
-                workingDirectory: infra/qa
+                workingDirectory: $(Work_Dir)
                 environmentServiceNameAzureRM: $(qaServiceConnection)
                 commandOptions: "-var-file=qa.tfvars"
 
@@ -126,7 +130,7 @@ stages:
               inputs:
                 provider: azurerm
                 command: apply
-                workingDirectory: infra/qa
+                workingDirectory: $(Work_Dir)
                 environmentServiceNameAzureRM: $(qaServiceConnection)
                 commandOptions: "-var-file=qa.tfvars"
 
@@ -134,11 +138,11 @@ stages:
 #  Prod Env
 - stage: ProdDeploy
   displayName: Deploy to Prod
-  dependsOn: DevDeploy
+  dependsOn: QADeploy
   condition: and(
-      succeeded(),
-      startsWith(variables['Build.SourceBranch'], 'refs/heads/feature/')
-      )
+    succeeded(),
+    eq(variables['Build.SourceBranch'], 'refs/heads/main')
+   )
   # approval: true   # Enables manual approval
   jobs:
   - deployment: ProdJob

@@ -140,9 +140,9 @@ stages:
   displayName: Deploy to Prod
   dependsOn: QADeploy
   condition: and(
-      succeeded(),
-      startsWith(variables['Build.SourceBranch'], 'refs/heads/feature/')
-      )
+    succeeded(),
+    eq(variables['Build.SourceBranch'], 'refs/heads/main')
+   )
   # approval: true   # Enables manual approval
   jobs:
   - deployment: ProdJob

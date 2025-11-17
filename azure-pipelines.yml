@@ -53,14 +53,14 @@ stages:
               inputs:
                 provider: azurerm
                 command: validate
-                workingDirectory: infra/dev
+                workingDirectory: $(Work_Dir)
 
             - task: TerraformTask@5
               displayName: Plan (Dev)
               inputs:
                 provider: azurerm
                 command: plan
-                workingDirectory: infra/dev
+                workingDirectory: $(Work_Dir)
                 environmentServiceNameAzureRM: $(devServiceConnection)
                 commandOptions: "-var-file=dev.tfvars"
 
@@ -69,7 +69,7 @@ stages:
               inputs:
                 provider: azurerm
                 command: apply
-                workingDirectory: infra/dev
+                workingDirectory: $(Work_Dir)
                 environmentServiceNameAzureRM: $(devServiceConnection)
                 commandOptions: "-var-file=dev.tfvars"
 
@@ -113,14 +113,14 @@ stages:
               inputs:
                 provider: azurerm
                 command: validate
-                workingDirectory: infra/prod
+                workingDirectory: $(Work_Dir)
 
             - task: TerraformTask@5
               displayName: Plan (Prod)
               inputs:
                 provider: azurerm
                 command: plan
-                workingDirectory: infra/prod
+                workingDirectory: $(Work_Dir)
                 environmentServiceNameAzureRM: $(prodServiceConnection)
                 commandOptions: "-var-file=prod.tfvars"
 
@@ -129,6 +129,6 @@ stages:
               inputs:
                 provider: azurerm
                 command: apply
-                workingDirectory: infra/prod
+                workingDirectory: $(Work_Dir)
                 environmentServiceNameAzureRM: $(prodServiceConnection)
                 commandOptions: "-var-file=prod.tfvars"

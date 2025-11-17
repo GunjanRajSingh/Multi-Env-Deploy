@@ -98,12 +98,12 @@ stages:
               inputs:
                 provider: azurerm
                 command: init
-                workingDirectory: infra/qa
+                workingDirectory: $(Work_Dir)
                 backendServiceArm: $(qaServiceConnection)
                 backendAzureRmResourceGroupName: $(qaTFStateRG)
                 backendAzureRmStorageAccountName: $(qaTFStateSA)
                 backendAzureRmContainerName: $(qaTFStateContainer)
-                backendAzureRmKey: qa.tfstate
+                backendAzureRmKey: $(qaTFStateKey)
                 backendAzureRmUseEntraIdForAuthentication: true
 
             - task: TerraformTask@5
@@ -111,14 +111,14 @@ stages:
               inputs:
                 provider: azurerm
                 command: validate
-                workingDirectory: infra/qa
+                workingDirectory: $(Work_Dir)
 
             - task: TerraformTask@5
               displayName: Plan (QA)
               inputs:
                 provider: azurerm
                 command: plan
-                workingDirectory: infra/qa
+                workingDirectory: $(Work_Dir)
                 environmentServiceNameAzureRM: $(qaServiceConnection)
                 commandOptions: "-var-file=qa.tfvars"
 
@@ -127,7 +127,7 @@ stages:
               inputs:
                 provider: azurerm
                 command: apply
-                workingDirectory: infra/qa
+                workingDirectory: $(Work_Dir)
                 environmentServiceNameAzureRM: $(qaServiceConnection)
                 commandOptions: "-var-file=qa.tfvars"
 

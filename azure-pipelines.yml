@@ -73,7 +73,62 @@ stages:
                 environmentServiceNameAzureRM: $(devServiceConnection)
                 commandOptions: "-var-file=dev.tfvars"
 
+- stage: QADeploy
+  displayName: Deploy to QA
+  dependsOn: DevDeploy
+  condition: and(
+      succeeded(),
+      startsWith(variables['Build.SourceBranch'], 'refs/heads/feature/')
+      )
+  jobs:
+  - deployment: QAJob
+    environment: QA
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+            - task: TerraformInstaller@1
+              displayName: Install Terraform
+              inputs:
+                terraformVersion: latest
 
+            - task: TerraformTask@5
+              displayName: Terraform Init (QA)
+              inputs:
+                provider: azurerm
+                command: init
+                workingDirectory: infra/qa
+                backendServiceArm: $(qaServiceConnection)
+                backendAzureRmResourceGroupName: $(qaTFStateRG)
+                backendAzureRmStorageAccountName: $(qaTFStateSA)
+                backendAzureRmContainerName: $(qaTFStateContainer)
+                backendAzureRmKey: qa.tfstate
+                backendAzureRmUseEntraIdForAuthentication: true
+
+            - task: TerraformTask@5
+              displayName: Validate (QA)
+              inputs:
+                provider: azurerm
+                command: validate
+                workingDirectory: infra/qa
+
+            - task: TerraformTask@5
+              displayName: Plan (QA)
+              inputs:
+                provider: azurerm
+                command: plan
+                workingDirectory: infra/qa
+                environmentServiceNameAzureRM: $(qaServiceConnection)
+                commandOptions: "-var-file=qa.tfvars"
+
+            - task: TerraformTask@5
+              displayName: Apply (QA)
+              inputs:
+                provider: azurerm
+                command: apply
+                workingDirectory: infra/qa
+                environmentServiceNameAzureRM: $(qaServiceConnection)
+                commandOptions: "-var-file=qa.tfvars"
 
 
 #  Prod Env

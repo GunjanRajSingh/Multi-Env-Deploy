@@ -1,3 +1,5 @@
+subscription_id = "444bd318-0457-4b5d-bf99-9e41e070d82d"
+
 resource_groups = {
   "rg1" = {
     name     = "prod-resource-group-1"

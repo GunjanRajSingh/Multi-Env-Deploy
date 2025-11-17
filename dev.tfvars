@@ -9,3 +9,4 @@ resource_groups = {
         managed_by = "example-manager"
     }
     }
+subscription_id = "32cee08e-9e85-4260-b011-934dc8e0b571"

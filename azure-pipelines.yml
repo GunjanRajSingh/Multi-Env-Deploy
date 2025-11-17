@@ -80,7 +80,10 @@ stages:
 - stage: ProdDeploy
   displayName: Deploy to Prod
   dependsOn: DevDeploy
-  condition: eq(variables['Build.SourceBranch'], 'refs/heads/feature/')
+  condition: and(
+      succeeded(),
+      startsWith(variables['Build.SourceBranch'], 'refs/heads/feature/')
+      )
   # approval: true   # Enables manual approval
   jobs:
   - deployment: ProdJob

@@ -138,7 +138,7 @@ stages:
 #  Prod Env
 - stage: ProdDeploy
   displayName: Deploy to Prod
-  dependsOn: QADeploy
+  dependsOn: [] 
   condition: and(
     succeeded(),
     eq(variables['Build.SourceBranch'], 'refs/heads/main')

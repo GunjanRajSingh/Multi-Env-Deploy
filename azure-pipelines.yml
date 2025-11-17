@@ -78,9 +78,9 @@ stages:
 #  Prod Env
 - stage: ProdDeploy
   displayName: Deploy to Prod
-  dependsOn: QADeploy
+  dependsOn: DevDeploy
   condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
-  approval: true   # Enables manual approval
+  # approval: true   # Enables manual approval
   jobs:
   - deployment: ProdJob
     environment: Prod
@@ -98,12 +98,12 @@ stages:
               inputs:
                 provider: azurerm
                 command: init
-                workingDirectory: infra/prod
+                workingDirectory: $(Work_Dir)
                 backendServiceArm: $(prodServiceConnection)
                 backendAzureRmResourceGroupName: $(prodTFStateRG)
                 backendAzureRmStorageAccountName: $(prodTFStateSA)
                 backendAzureRmContainerName: $(prodTFStateContainer)
-                backendAzureRmKey: prod.tfstate
+                backendAzureRmKey: $(prodTFStateKey)
                 backendAzureRmUseEntraIdForAuthentication: true
 
             - task: TerraformTask@5

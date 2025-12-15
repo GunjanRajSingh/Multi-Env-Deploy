@@ -1,10 +1,13 @@
 trigger:
   branches:
     include:
-      - feature/*
+      - feature/dev
+      - feature/stag
+      - release
+      - hotfix
       - main
 
-pr:
+pr: #manual
   branches:
     include:
       - main
@@ -17,6 +20,12 @@ variables:
   - group: QA-Variable
   - group: Prod-Variable
 
+parameters:
+  - env: Dev
+    default: Dev
+    name:
+      - Dev
+      - QA
 
 #  Dev Env
 stages:
@@ -55,6 +64,23 @@ stages:
                 provider: azurerm
                 command: validate
                 workingDirectory: $(Work_Dir)
+            
+            - script: |
+                curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
+                tflint --version
+              displayName: 'Install TFLint'
+
+            - script: |
+                tflint --init
+                tflint --format compact
+              workingDirectory: '$(Work_Dir)'
+              displayName: 'Run TFLint checks'
+                
+            - task: tfsec@1
+              displayName: TF Security
+              inputs:
+                version: 'v1.26.0'
+                dir: '$(Work_Dir)'
 
             - task: TerraformTask@5
               displayName: Plan (Dev)

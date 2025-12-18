@@ -1,11 +1,14 @@
 trigger:
   branches:
     include:
-      - feature/dev
-      - feature/stag
-      - release
-      - hotfix
+      - feature/add-Image
+      - feature/add-button
+      - master
       - main
+
+    exclude:
+      - patch-1
+      - patch-2
 
 pr: #manual
   branches:
@@ -15,17 +18,11 @@ pr: #manual
 pool:
   vmImage: ubuntu-latest
 
-variables:
-  - group: Dev-Variable
-  - group: QA-Variable
-  - group: Prod-Variable
-
-parameters:
-  - env: Dev
-    default: Dev
-    name:
-      - Dev
-      - QA
+# variables:
+#   - group: Dev-Variable
+  # - group: Dev-Variable
+  # - group: QA-Variable
+  # - group: Prod-Variable
 
 #  Dev Env
 stages:
@@ -34,6 +31,9 @@ stages:
   condition: startsWith(variables['Build.SourceBranch'], 'refs/heads/feature/')
   jobs:
   - deployment: DevJob
+    displayName: DevJob
+    variables:
+    - group: Dev-Variable  
     environment: Dev
     strategy:
       runOnce:

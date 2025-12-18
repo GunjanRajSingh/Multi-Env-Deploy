@@ -18,11 +18,6 @@ pr: #manual
 pool:
   vmImage: ubuntu-latest
 
-# variables:
-#   - group: Dev-Variable
-  # - group: Dev-Variable
-  # - group: QA-Variable
-  # - group: Prod-Variable
 
 #  Dev Env
 stages:
@@ -33,13 +28,14 @@ stages:
   - deployment: DevJob
     displayName: DevJob
     variables:
-    - group: Dev-Variable  
+      - group: Dev-Variable
     environment: Dev
     strategy:
       runOnce:
         deploy:
           steps:
             - checkout: self
+
             - task: TerraformInstaller@1
               displayName: Install Terraform
               inputs:
@@ -53,8 +49,8 @@ stages:
                 workingDirectory: $(Work_Dir)
                 backendServiceArm: $(devServiceConnection)
                 backendAzureRmResourceGroupName: $(devTFStateRG)
-                backendAzureRmStorageAccountName: $(devTFStateSA)
-                backendAzureRmContainerName: $(devTFStateContainer)
+                backendAzureRmStorageAccountName: $(devTFStateSA) stgunjandev24794
+                backendAzureRmContainerName: $(devTFStateContainer) tfdevgunjan
                 backendAzureRmKey: $(devTFStateKey)
                 backendAzureRmUseEntraIdForAuthentication: true
 
@@ -64,6 +60,7 @@ stages:
                 provider: azurerm
                 command: validate
                 workingDirectory: $(Work_Dir)
+                environmentAzureRmOverrideSubscriptionID: exy
             
             - script: |
                 curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
@@ -81,7 +78,7 @@ stages:
               inputs:
                 version: 'v1.26.0'
                 dir: '$(Work_Dir)'
-
+            
             - task: TerraformTask@5
               displayName: Plan (Dev)
               inputs:
@@ -111,6 +108,8 @@ stages:
       )
   jobs:
   - deployment: QAJob
+    variables:
+      - group: QA-Variable
     environment: QA
     strategy:
       runOnce:
